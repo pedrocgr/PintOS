@@ -2,7 +2,13 @@
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.166.1/containers/ubuntu
 {
 	"name": "pintos",
-	"image": "liangroy/pintos_dev_container:latest",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"context": "..",
+		"args": {
+			"VARIANT": "focal"
+		}
+	},
 	"runArgs": [
 		"--rm"
 	],
@@ -10,14 +16,18 @@
 	"workspaceMount": "source=${localWorkspaceFolder},target=/pintos,type=bind,consistency=cached",
 	"workspaceFolder": "/pintos",
 	// Set *default* container specific settings.json values on container create.
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash"
-	},
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"ms-vscode.cpptools",
-		"xaver.clang-format"
-	],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash"
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-vscode.cpptools",
+				"xaver.clang-format"
+			]
+		}
+	}
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Use 'postCreateCommand' to run commands after the container is created.

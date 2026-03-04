@@ -1,7 +1,7 @@
 # See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.166.1/containers/ubuntu/.devcontainer/base.Dockerfile
 
-# [Choice] Ubuntu version: bionic, focal
-ARG VARIANT="bionic"
+# [Choice] Ubuntu version: focal, jammy
+ARG VARIANT="focal"
 FROM mcr.microsoft.com/vscode/devcontainers/base:0-${VARIANT}
 
 RUN apt-get update \
@@ -38,7 +38,8 @@ RUN cd /pintos/src/misc && \
     env SRCDIR=/pintos/src/misc PINTOSDIR=/pintos DSTDIR=/usr/local sh ./bochs-2.6.11-build.sh /usr/local && \
     rm -f bochs-2.6.11.tar.gz
 
-RUN cd /pintos/src/utils && make
+# Build only setitimer-helper (squish-pty/squish-unix need deprecated stropts.h)
+RUN cd /pintos/src/utils && make setitimer-helper && cp setitimer-helper /usr/local/bin/
 
 # RUN cd /pintos/src/threads && make
 

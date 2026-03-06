@@ -22,6 +22,7 @@ RUN apt-get update \
     expect \
     rsync \
     clang-format \
+    qemu-system-x86 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -24,6 +24,10 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+/* List of processes in THREAD_BLOCKED state, that is, processes
+   that are waiting for an event to trigger. */
+static struct list blocked_list;
+
 /* List of all processes.  Processes are added to this list
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
@@ -91,6 +95,7 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
+  list_init (&blocked_list);
   list_init (&all_list);
 
   /* Set up a thread structure for the running thread. */
@@ -312,6 +317,57 @@ thread_yield (void)
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
+}
+
+bool
+thread_wake_cmp (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED)
+{
+  const struct thread *t_a = list_entry (a, struct thread, elem);
+  const struct thread *t_b = list_entry (b, struct thread, elem);
+
+  /* return who must wakeup first */
+  return t_a->wakeup_tick < t_b->wakeup_tick;
+}
+
+void
+thread_sleep (int64_t ticks)
+{
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+
+  old_level = intr_disable ();
+
+  cur->wakeup_tick = ticks;
+  list_insert_ordered (&blocked_list, &cur->elem, thread_wake_cmp, NULL);
+  thread_block ();
+
+  intr_set_level (old_level);
+}
+
+void
+thread_wake (int64_t ticks)
+{
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  /* since blocked_list is ordered, the first element should wakeup*/
+  while (!list_empty (&blocked_list))
+  {
+    e = list_begin (&blocked_list);
+    struct thread *t = list_entry (e, struct thread, elem);
+
+    if (t->wakeup_tick <= ticks)
+    {
+      list_pop_front (&blocked_list);
+      thread_unblock (t);
+    }
+    else
+    {
+      /* if the first elem is not supposed to wakeup, no one should*/
+      break;
+    }
+  }
 }
 
 /* Invoke function 'func' on all threads, passing along 'aux'.

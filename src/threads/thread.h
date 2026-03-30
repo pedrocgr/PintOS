@@ -88,6 +88,11 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
+    int base_priority;                  /* Priority before donations. */
+    struct list donations;              /* List of locks for donation. */
+    struct lock *waiting_on;            /* Lock thread is waiting on. */
+    int nice;                           /* Nice value for MLFQS. */
+    int recent_cpu;                     /* Recent CPU usage (fixed-point). */
     int64_t wakeup_tick;                 /* Tick to wake up sleeping thread. */
     struct list_elem allelem;           /* List element for all threads list. */
 
@@ -127,6 +132,7 @@ const char *thread_name (void);
 void thread_exit (void) NO_RETURN;
 void thread_yield (void);
 
+bool thread_priority_cmp (const struct list_elem *a, const struct list_elem *b, void *aux);
 bool thread_wake_cmp (const struct list_elem *a, const struct list_elem *b, void *aux UNUSED);
 void thread_wake (int64_t ticks);
 void thread_sleep (int64_t ticks);
